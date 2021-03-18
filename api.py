@@ -1,8 +1,8 @@
 from static import Scope
 import requests
 import pprint
-printer = pprint.PrettyPrinter()
 
+printer = pprint.PrettyPrinter()
 
 BASE_URL = 'https://api.exchange.bitpanda.com/public/v1'
 
@@ -68,7 +68,6 @@ class Api:
 
         return response.json()
 
-
     def get_currencies(self):
         """
         Returns currencies with their precision
@@ -92,3 +91,38 @@ class Api:
 
         return currencies
 
+    def get_server_time_iso(self):
+        """
+        Returns current server time of the bitpanda server in iso
+
+        Returns:
+        -------
+        set(**tuple()): list with tuples containing code and precision of currency
+
+        """
+
+        url = BASE_URL + '/time'
+
+        response = requests.request('GET', url)
+
+        json = response.json()
+
+        return json['iso']
+
+    def get_server_time_millis(self):
+        """
+        Returns elapsed milliseconds since Unix Epoch.
+
+        Returns:
+        -------
+        set(**tuple()): list with tuples containing code and precision of currency
+
+        """
+
+        url = BASE_URL + '/time'
+
+        response = requests.request('GET', url)
+
+        json = response.json()
+
+        return json['epoch_millis']
