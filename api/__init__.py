@@ -1,6 +1,6 @@
 import requests
 import pprint
-from .static import Scope
+from .static import Scope, Fiat
 from .account import Account
 
 printer = pprint.PrettyPrinter()
@@ -65,7 +65,7 @@ class Api:
 
         url = BASE_URL + '/fees'
 
-        response = requests.request('GET', url)
+        response = requests.get(url)
 
         return response.json()
 
@@ -81,7 +81,7 @@ class Api:
 
         url = BASE_URL + '/currencies'
 
-        response = requests.request('GET', url)
+        response = requests.get(url)
 
         json = response.json()
 
@@ -104,7 +104,7 @@ class Api:
 
         url = BASE_URL + '/time'
 
-        response = requests.request('GET', url)
+        response = requests.get(url)
 
         json = response.json()
 
@@ -122,7 +122,7 @@ class Api:
 
         url = BASE_URL + '/time'
 
-        response = requests.request('GET', url)
+        response = requests.get(url)
 
         json = response.json()
 
@@ -130,7 +130,7 @@ class Api:
 
     def get_account_balances(self):
         """
-        Returns account with all wallets.
+        Returns the balance details for an account.
 
         Returns:
         -------
@@ -139,8 +139,90 @@ class Api:
         """
 
         url = BASE_URL + '/account/balances'
-        headers = {'Authorization': "Bearer " + self.api_key}
+        headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': 'Bearer ' + self.api_key
+        }
 
-        response = requests.request('GET', url, headers=headers)
+        response = requests.get(url, headers=headers)
 
         return Account.from_json(response.json())
+
+    def deposit_crypto(self, curr_code):
+        """
+        Creates a new deposit address for the given currency code.
+        Make sure to use a valid api key with the scope WITHDRAW, otherwise this operation will be rejected.
+        The api key can be generated via the user interface at https://exchange.bitpanda.com/account/api/keys.
+
+        todo unavailbale?
+
+        """
+
+        url = BASE_URL + '/account/deposit/crypto'
+        headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': 'Bearer ' + self.api_key
+        }
+
+        params = {
+            'currency': curr_code
+        }
+
+        response = requests.post(url, headers=headers, params=params)
+
+        print(response.json())
+
+    def get_deposit_address(self, curr_code):
+        """
+        Returns a deposit address for the given crypto currency code.
+        Fiat currency codes will not work! Make sure to use a valid API key with the scope WITHDRAW,
+        otherwise this operation will be rejected. The api key can be generated via the user interface.
+
+        todo
+
+        Returns:
+        -------
+        Account : account belonging to api_key
+
+        """
+
+        url = BASE_URL + '/account/deposit/crypto/' + curr_code
+
+        headers = {
+            'Accept': 'application/json',
+            'Authorization': 'Bearer ' + self.api_key
+        }
+
+        response = requests.get(url, headers=headers)
+
+        if not response.json()['enabled']:
+            return None
+
+        return response.json()['address']
+
+    def get_deposit_fiat(self, fiat: Fiat):
+        """
+        Returns deposit information for SEPA payments.
+        Make sure to use a valid API key with the scope WITHDRAW, otherwise this operation will be rejected.
+        The API key can be generated via the user interface.
+
+        todo
+
+        Returns:
+        -------
+        Account : account belonging to api_key
+
+        """
+
+        url = BASE_URL + '/account/deposit/fiat/' + fiat.value
+
+        headers = {
+            'Accept': 'application/json',
+            'Authorization': 'Bearer ' + self.api_key
+        }
+
+        response = requests.get(url, headers=headers)
+
+        return response.json()
