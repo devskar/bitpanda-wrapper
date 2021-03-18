@@ -1,6 +1,7 @@
 import requests
 import pprint
 from .static import Scope
+from .account import Account
 
 printer = pprint.PrettyPrinter()
 
@@ -115,7 +116,7 @@ class Api:
 
         Returns:
         -------
-        int: list with tuples containing code and precision of currency
+        int : list with tuples containing code and precision of currency
 
         """
 
@@ -128,4 +129,18 @@ class Api:
         return json['epoch_millis']
 
     def get_account_balances(self):
-        pass
+        """
+        Returns account with all wallets.
+
+        Returns:
+        -------
+        Account : account belonging to api_key
+
+        """
+
+        url = BASE_URL + '/account/balances'
+        headers = {'Authorization': "Bearer " + self.api_key}
+
+        response = requests.request('GET', url, headers=headers)
+
+        return Account.from_json(response.json())
