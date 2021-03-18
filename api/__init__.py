@@ -182,7 +182,12 @@ class Api:
 
         todo
 
-        Returns:
+        Parameters
+        ----------
+        curr_code : str, optional
+            The currency code for the address.
+
+        Returns
         -------
         Account : account belonging to api_key
 
@@ -210,7 +215,12 @@ class Api:
 
         todo
 
-        Returns:
+        Parameters
+        ----------
+        fiat : Fiat, optional
+            The fiat of the deposit wanted.
+
+        Returns
         -------
         Account : account belonging to api_key
 
