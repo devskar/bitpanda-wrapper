@@ -11,7 +11,8 @@ BASE_URL = 'https://api.exchange.bitpanda.com/public/v1'
 class Api:
     """
     A class used to make HTTP requests to https://exchange.bitpanda.com/
-    ...
+
+
     Attributes
     ----------
     scope : api.Scope
@@ -157,9 +158,47 @@ class Api:
 
         todo unavailbale?
 
+        Parameters
+        ----------
+        curr_code : str, optional
+            Currency code of crypto asset
+
         """
 
         url = BASE_URL + '/account/deposit/crypto'
+        headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': 'Bearer ' + self.api_key
+        }
+
+        params = {
+            'currency': curr_code
+        }
+
+        response = requests.post(url, headers=headers, params=params)
+
+        print(response.json())
+
+    def withdraw_crypto(self, curr_code):
+        """
+        Initiates a withdrawal.
+        Make sure to use a valid api key with the scope WITHDRAW, otherwise this operation will be rejected.
+        The api key can be generated via the user interface.
+        2FA is disabled and the withdraw operation will not require an approval by email.
+        It's best practice to limit the api key to one IP address and never give out the api key.
+        Only crypto currencies are allowed to withdraw on this endpoint!
+
+        todo unavailbale?
+
+        Parameters
+        ----------
+        curr_code : str
+            Currency code of crypto asset
+
+        """
+
+        url = BASE_URL + '/account/withdraw/crypto'
         headers = {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
@@ -184,8 +223,8 @@ class Api:
 
         Parameters
         ----------
-        curr_code : str, optional
-            The currency code for the address.
+        curr_code : str
+            Currency code of crypto asset
 
         Returns
         -------
@@ -217,7 +256,7 @@ class Api:
 
         Parameters
         ----------
-        fiat : Fiat, optional
+        fiat : Fiat
             The fiat of the deposit wanted.
 
         Returns
