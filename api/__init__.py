@@ -1,6 +1,6 @@
-from static import Scope
 import requests
 import pprint
+from .static import Scope
 
 printer = pprint.PrettyPrinter()
 
@@ -115,7 +115,7 @@ class Api:
 
         Returns:
         -------
-        set(**tuple()): list with tuples containing code and precision of currency
+        int: list with tuples containing code and precision of currency
 
         """
 
@@ -126,3 +126,6 @@ class Api:
         json = response.json()
 
         return json['epoch_millis']
+
+    def get_account_balances(self):
+        pass
