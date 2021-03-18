@@ -156,7 +156,8 @@ class Api:
         Make sure to use a valid api key with the scope WITHDRAW, otherwise this operation will be rejected.
         The api key can be generated via the user interface at https://exchange.bitpanda.com/account/api/keys.
 
-        todo unavailbale?
+        Todo
+            unavailable?
 
         Parameters
         ----------
@@ -180,7 +181,7 @@ class Api:
 
         print(response.json())
 
-    def withdraw_crypto(self, curr_code):
+    def withdraw_crypto(self, withdraw_crypto_body):
         """
         Initiates a withdrawal.
         Make sure to use a valid api key with the scope WITHDRAW, otherwise this operation will be rejected.
@@ -189,12 +190,14 @@ class Api:
         It's best practice to limit the api key to one IP address and never give out the api key.
         Only crypto currencies are allowed to withdraw on this endpoint!
 
-        todo unavailbale?
+        Todo
+            - unavailable?
 
         Parameters
         ----------
-        curr_code : str
-            Currency code of crypto asset
+        withdraw_crypto_body : withdraw.WithdrawCryptoBody
+            Withdrawal information
+
 
         """
 
@@ -205,9 +208,7 @@ class Api:
             'Authorization': 'Bearer ' + self.api_key
         }
 
-        params = {
-            'currency': curr_code
-        }
+
 
         response = requests.post(url, headers=headers, params=params)
 
@@ -219,7 +220,8 @@ class Api:
         Fiat currency codes will not work! Make sure to use a valid API key with the scope WITHDRAW,
         otherwise this operation will be rejected. The api key can be generated via the user interface.
 
-        todo
+        Todo
+            - unavailable?
 
         Parameters
         ----------
@@ -252,7 +254,8 @@ class Api:
         Make sure to use a valid API key with the scope WITHDRAW, otherwise this operation will be rejected.
         The API key can be generated via the user interface.
 
-        todo
+        Todo
+            - unavailable
 
         Parameters
         ----------
