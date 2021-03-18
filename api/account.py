@@ -1,7 +1,7 @@
 class Account:
     """
     A class used to hold wallets
-    ...
+
     Attributes
     ----------
     id: str
@@ -22,11 +22,12 @@ class Account:
     def from_json(json):
         """
         Returns account instance based on json
-        Parameters:
+
+        Parameters
         ----------
         json (str) : json
 
-        Returns:
+        Returns
         -------
         Account : Returning account instance
        """
@@ -67,10 +68,7 @@ class Wallet:
     time : str
         todo
 
-    Methods
-    -------
-    from_json(json)
-        Returns account instance based on json
+
     """
 
     def __init__(self, id, currency_code, change, available, locked, sequence, time):
