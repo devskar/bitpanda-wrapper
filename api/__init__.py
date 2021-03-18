@@ -1,5 +1,7 @@
 import requests
 import pprint
+
+from .objects.withdraw import WithdrawCryptoBody
 from .static import Scope, Fiat
 from .account import Account
 
@@ -181,7 +183,7 @@ class Api:
 
         print(response.json())
 
-    def withdraw_crypto(self, withdraw_crypto_body):
+    def withdraw_crypto(self, withdraw_crypto_body: WithdrawCryptoBody):
         """
         Initiates a withdrawal.
         Make sure to use a valid api key with the scope WITHDRAW, otherwise this operation will be rejected.
@@ -208,9 +210,7 @@ class Api:
             'Authorization': 'Bearer ' + self.api_key
         }
 
-
-
-        response = requests.post(url, headers=headers, params=params)
+        response = requests.post(url, headers=headers, params=withdraw_crypto_body.to_dict())
 
         print(response.json())
 
@@ -270,6 +270,70 @@ class Api:
 
         url = BASE_URL + '/account/deposit/fiat/' + fiat.value
 
+        headers = {
+            'Accept': 'application/json',
+            'Authorization': 'Bearer ' + self.api_key
+        }
+
+        response = requests.get(url, headers=headers)
+
+        return response.json()
+
+    def withdraw_fiat(self, withdraw_crypto_body: WithdrawCryptoBody):
+        """
+        Initiates a withdrawal.
+        Make sure to use a valid api key with the scope WITHDRAW, otherwise this operation will be rejected.
+        The api key can be generated via the user interface.
+        2FA is disabled and the withdrawal operation will not require an approval by E-Mail.
+        A best practice is to limit the api key to one IP and never hand out the api key.
+        Only EUR can be withdrawn on this endpoint!
+
+        Todo
+            - unavailable?
+
+        Parameters
+        ----------
+        withdraw_crypto_body : withdraw.WithdrawCryptoBody
+            Withdrawal information
+
+
+        """
+
+        url = BASE_URL + '/account/withdraw/fiat'
+        headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': 'Bearer ' + self.api_key
+        }
+
+        response = requests.post(url, headers=headers, params=withdraw_crypto_body.to_dict())
+
+        return response.json()['transaction_id']
+
+    def get_account_deposits(self, start='', end='', currency_code='', max_page_size='', cursor=''):
+        """
+        Return a paginated report on past cleared deposits, sorted by timestamp (newest first).
+        If no query parameters are defined, it returns the last 100 deposits.
+
+
+        Todo
+            - unavailable
+
+        Parameters
+        ----------
+        start : str
+            (Zoned date time value compliant with ISO 8601 which adheres to RFC3339. All market times are in UTC.)
+            Defines start of a query search.
+        end : str
+            (Zoned date time value compliant with ISO 8601 which adheres to RFC3339. All market times are in UTC.)
+            Defines end of a query search.
+
+        Returns
+        -------
+        Account : account belonging to api_key
+
+        """
+        url = BASE_URL + '/account/deposits'
         headers = {
             'Accept': 'application/json',
             'Authorization': 'Bearer ' + self.api_key
