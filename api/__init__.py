@@ -1,11 +1,9 @@
 import requests
-import pprint
 
 from .objects.withdraw import WithdrawCryptoBody
 from .static import Scope, Fiat
 from .wallets import Wallet
 
-printer = pprint.PrettyPrinter()
 
 BASE_URL = 'https://api.exchange.bitpanda.com/public/v1'
 
@@ -463,3 +461,25 @@ class Account:
         response = requests.get(url, headers=headers, params=params)
 
         return response.json()['withdrawal_history']
+
+    def get_fees(self):
+        """
+        Returns the fee tiers, the running trading volume, the active fee tier specific for an account and
+        the BEST fee collection settings.
+
+        Returns
+        -------
+        dict/json :    Returns the fee tiers, the running trading volume, the active fee tier specific for an account and
+                        the BEST fee collection settings.
+
+        """
+
+        url = BASE_URL + '/account/fees'
+        headers = {
+            'Accept': 'application/json',
+            'Authorization': 'Bearer ' + self.api_key
+        }
+
+        response = requests.get(url, headers=headers)
+
+        return response.json()
