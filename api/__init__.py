@@ -10,91 +10,88 @@ printer = pprint.PrettyPrinter()
 BASE_URL = 'https://api.exchange.bitpanda.com/public/v1'
 
 
-class Api:
+def get_fees():
     """
-    A class used to make HTTP requests to https://exchange.bitpanda.com/
+    Returns bitpanda fees
+
+    Returns:
+    -------
+    string/json: fees
 
     """
 
-    def get_fees(self):
-        """
-        Returns bitpanda fees
+    url = BASE_URL + '/fees'
 
-        Returns:
-        -------
-        string/json: fees
+    response = requests.get(url)
 
-        """
+    return response.json()
 
-        url = BASE_URL + '/fees'
 
-        response = requests.get(url)
+def get_currencies():
+    """
+    Returns currencies with their precision
 
-        return response.json()
+    Returns:
+    -------
+    set(**tuple()): list with tuples containing code and precision of currency
 
-    def get_currencies(self):
-        """
-        Returns currencies with their precision
+    """
 
-        Returns:
-        -------
-        set(**tuple()): list with tuples containing code and precision of currency
+    url = BASE_URL + '/currencies'
 
-        """
+    response = requests.get(url)
 
-        url = BASE_URL + '/currencies'
+    json = response.json()
 
-        response = requests.get(url)
+    currencies = set()
 
-        json = response.json()
+    for currency in json:
+        currencies.add((currency['code'], currency['precision']))
 
-        currencies = set()
+    return currencies
 
-        for currency in json:
-            currencies.add((currency['code'], currency['precision']))
 
-        return currencies
+def get_server_time_iso():
+    """
+    Returns current server time of the bitpanda server in iso
 
-    def get_server_time_iso(self):
-        """
-        Returns current server time of the bitpanda server in iso
+    Returns:
+    -------
+    set(**tuple()): list with tuples containing code and precision of currency
 
-        Returns:
-        -------
-        set(**tuple()): list with tuples containing code and precision of currency
+    """
 
-        """
+    url = BASE_URL + '/time'
 
-        url = BASE_URL + '/time'
+    response = requests.get(url)
 
-        response = requests.get(url)
+    json = response.json()
 
-        json = response.json()
+    return json['iso']
 
-        return json['iso']
 
-    def get_server_time_millis(self):
-        """
-        Returns elapsed milliseconds since Unix Epoch.
+def get_server_time_millis():
+    """
+    Returns elapsed milliseconds since Unix Epoch.
 
-        Returns:
-        -------
-        int : list with tuples containing code and precision of currency
+    Returns:
+    -------
+    int : list with tuples containing code and precision of currency
 
-        """
+    """
 
-        url = BASE_URL + '/time'
+    url = BASE_URL + '/time'
 
-        response = requests.get(url)
+    response = requests.get(url)
 
-        json = response.json()
+    json = response.json()
 
-        return json['epoch_millis']
+    return json['epoch_millis']
 
 
 class Account:
     """
-    Class to make account related HTTP requests to https://exchange.bitpanda.com/
+    Class to make private related HTTP requests to https://exchange.bitpanda.com/
     """
 
     def __init__(self, api_key):
