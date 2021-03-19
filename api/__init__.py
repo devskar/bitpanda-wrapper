@@ -4,7 +4,6 @@ from .objects.withdraw import WithdrawCryptoBody
 from .static import Scope, Fiat
 from .wallets import Wallet
 
-
 BASE_URL = 'https://api.exchange.bitpanda.com/public/v1'
 
 
@@ -481,5 +480,115 @@ class Account:
         }
 
         response = requests.get(url, headers=headers)
+
+        return response.json()
+
+    def toggle_best_fee_collection(self, collect_fees_in_best: bool = None):
+        """
+        Updates the fee toggle to enable or disable fee collection with BEST (Bitpanda Ecosystem Token).
+        When the BEST fee collection feature is enabled a discount defined in fee_discount_rate will be deducted.
+        In the payload example the value would be 25%. Additionally a minimum_price_value will be used for
+        calculating how much BEST is deducted. In the example payload a price of 0.12 EUR would be used.
+        If the price of BEST is lower than this value, then the minimum_price_value will be used for the calculation.
+        Make sure you have enough BEST when a trade is executed, otherwise the fee discount and the minimum price value
+        will not be applied!
+
+        TODO
+            unavailable?
+
+        Parameters
+        ----------
+        collect_fees_in_best : bool
+
+        Returns
+        -------
+        dict : updated fees
+
+        """
+
+        url = BASE_URL + '/account/deposit/crypto'
+        headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': 'Bearer ' + self.api_key
+        }
+
+        params = {
+            'collect_fees_in_best': collect_fees_in_best
+        }
+
+        response = requests.post(url, headers=headers, params=params)
+
+        return response.json()
+
+    def get_orders(self, start=None, end=None, instrument_code=None, with_cancelled_and_rejected=None,
+                   with_just_filled_inactive= None, with_just_orders=None, max_page_size=None, cursor=None):
+        """
+        Return a paginated report on currently open orders, sorted by creation timestamp (newest first).
+        Query parameters and filters can be used to specify if historical orders should be reported as well.
+        If no query filters are defined, all orders which are currently active will be returned.
+        If you want to query specific time frame parameters, from and to are mandatory,
+        otherwise it will start from the latest orders.
+        The maximum time frame you can query at one time is 100 days.
+
+        Parameters
+        ----------
+        start : str
+            (Zoned date time value compliant with ISO 8601 which adheres to RFC3339. All market times are in UTC.)
+            Defines start of a query search.
+
+        end : str
+            (Zoned date time value compliant with ISO 8601 which adheres to RFC3339. All market times are in UTC.)
+            Defines end of a query search.
+
+        instrument_code : str
+            Filter order history by instrument code
+
+        with_cancelled_and_rejected : bool
+            Return orders which have been cancelled by the user before being filled or rejected by the system as
+            invalid. Additionally, all inactive filled orders which would return with "with_just_filled_inactive".
+
+        with_just_filled_inactive : bool
+            Return order history for orders which have been filled and are no longer open.
+            Use of "with_cancelled_and_rejected" extends "with_just_filled_inactive"
+            and in case both are specified the latter is ignored.
+
+        with_just_orders : bool
+            Returns order history for orders but does not return any trades corresponding to the orders.
+            It may be significantly faster and should be used if user is not interesting in trade information.
+            Can be combined with any other filter.
+
+        max_page_size : str
+            Set max desired page size. If no value is provided, by default a maximum of 100 results per page
+            are returned. The maximum upper limit is 100 results per page.
+
+        cursor : str
+            Pointer specifying the position from which the next pages should be returned.
+
+        Returns
+        -------
+        list(json) : Returns the withdrawals history from Bitpanda of account
+
+        """
+
+        params = {
+            'from': start,
+            'to': end,
+            'instrument_code': instrument_code,
+            'with_cancelled_and_rejected': with_cancelled_and_rejected,
+            'with_just_filled_inactive': with_just_filled_inactive,
+            'with_just_orders': with_just_orders,
+            'max_page_size': max_page_size,
+            'cursor': cursor
+        }
+
+        url = BASE_URL + '/account/orders'
+        headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': 'Bearer ' + self.api_key
+        }
+
+        response = requests.get(url, headers=headers, params=params)
 
         return response.json()
