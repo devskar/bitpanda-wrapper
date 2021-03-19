@@ -1,6 +1,6 @@
-class Account:
+class Wallet:
     """
-    A class used to hold wallets
+    A class used to hold CryptoWallets
 
     Attributes
     ----------
@@ -12,7 +12,7 @@ class Account:
     Methods
     -------
     from_json(json)
-        Returns account instance based on json
+        Returns wallet instance based on json
     """
     def __init__(self, id, wallets):
         self.id = id
@@ -29,21 +29,21 @@ class Account:
 
         Returns
         -------
-        Account : Returning account instance
+        Wallet : Returning wallet instance
        """
 
         wallets = set()
 
         for wallet in json['balances']:
-            wallets.add(Wallet(wallet['account_id'], wallet['currency_code'], wallet['change'],
-                               wallet['available'], wallet['locked'], wallet['sequence'], wallet['time']))
+            wallets.add(CryptoWallet(wallet['account_id'], wallet['currency_code'], wallet['change'],
+                                     wallet['available'], wallet['locked'], wallet['sequence'], wallet['time']))
 
-        return Account(json['account_id'], wallets)
+        return Wallet(json['account_id'], wallets)
 
 
-class Wallet:
+class CryptoWallet:
     """
-    Stores cryptocurrencies
+    Stores a cryptocurrency
     ...
     Attributes
     ----------
