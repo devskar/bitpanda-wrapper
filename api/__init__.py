@@ -3,7 +3,7 @@ import pprint
 
 from .objects.withdraw import WithdrawCryptoBody
 from .static import Scope, Fiat
-from .account import Account
+from .wallets import Wallet
 
 printer = pprint.PrettyPrinter()
 
@@ -14,47 +14,7 @@ class Api:
     """
     A class used to make HTTP requests to https://exchange.bitpanda.com/
 
-
-    Attributes
-    ----------
-    scope : api.Scope
-        scope your api key is set to
-
-    Methods
-    -------
-    get_currencies()
-        Returns currencies with their precision
     """
-
-    def __init__(self, scope=Scope.READ):
-        self._api_key = ''
-        self._scope = scope
-
-    @property
-    def scope(self):
-        """Get the current scope."""
-        return self._scope
-
-    @scope.setter
-    def scope(self, value):
-        self._scope = value
-
-    @scope.deleter
-    def scope(self):
-        del self._scope
-
-    @property
-    def api_key(self):
-        """Get the current api key."""
-        return self._api_key
-
-    @api_key.setter
-    def api_key(self, value):
-        self._api_key = value
-
-    @api_key.deleter
-    def api_key(self):
-        del self._api_key
 
     def get_fees(self):
         """
@@ -131,6 +91,15 @@ class Api:
 
         return json['epoch_millis']
 
+
+class Account:
+    """
+    Class to make account related HTTP requests to https://exchange.bitpanda.com/
+    """
+
+    def __init__(self, api_key):
+        self.api_key = api_key
+
     def get_account_balances(self):
         """
         Returns the balance details for an account.
@@ -150,7 +119,7 @@ class Api:
 
         response = requests.get(url, headers=headers)
 
-        return Account.from_json(response.json())
+        return Wallet.from_json(response.json())
 
     def deposit_crypto(self, curr_code):
         """
@@ -356,7 +325,8 @@ class Api:
 
         return response.json()['deposit_history']
 
-    def get_account_deposits_from_bitpanda(self, start=None, end=None, currency_code=None, max_page_size=None, cursor=None):
+    def get_account_deposits_from_bitpanda(self, start=None, end=None, currency_code=None, max_page_size=None,
+                                           cursor=None):
         """
         Return a paginated report on past cleared deposits which were transfers from Bitpanda.
         This endpoint returns only transfers from Bitpanda, if you wish to see all deposits use Deposits,
@@ -392,7 +362,7 @@ class Api:
             'cursor': cursor
         }
 
-        url = BASE_URL + '/account/deposits'
+        url = BASE_URL + '/account/deposits/bitpanda'
         headers = {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
@@ -439,6 +409,54 @@ class Api:
         }
 
         url = BASE_URL + '/account/withdrawals'
+        headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': 'Bearer ' + self.api_key
+        }
+
+        response = requests.get(url, headers=headers, params=params)
+
+        return response.json()['withdrawal_history']
+
+    def get_account_withdrawals_from_bitpanda(self, start=None, end=None, currency_code=None, max_page_size=None,
+                                              cursor=None):
+        """
+        Return a paginated report on past cleared withdrawals which were transfers from Bitpanda.
+        This endpoint returns only transfers from Bitpanda, if you wish to see all withdrawals use Withdrawals,
+        sorted by timestamp (newest first). If no query parameters are defined, it returns the last 100 deposits.
+
+        Parameters
+        ----------
+        start : str
+            (Zoned date time value compliant with ISO 8601 which adheres to RFC3339. All market times are in UTC.)
+            Defines start of a query search.
+        end : str
+            (Zoned date time value compliant with ISO 8601 which adheres to RFC3339. All market times are in UTC.)
+            Defines end of a query search.
+        currency_code : str
+            Filter withdrawal history by currency code
+        max_page_size : str
+            Set max desired page size. If no value is provided, by default a maximum of 100 results per page
+            are returned. The maximum upper limit is 100 results per page.
+        cursor : str
+            Pointer specifying the position from which the next pages should be returned.
+
+        Returns
+        -------
+        list(json) : Returns the withdrawals history from Bitpanda of account
+
+        """
+
+        params = {
+            'from': start,
+            'to': end,
+            'currency_code': currency_code,
+            'max_page_size': max_page_size,
+            'cursor': cursor
+        }
+
+        url = BASE_URL + '/account/withdrawals/bitpanda'
         headers = {
             'Content-Type': 'application/json',
             'Accept': 'application/json',
