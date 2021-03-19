@@ -310,14 +310,10 @@ class Api:
 
         return response.json()['transaction_id']
 
-    def get_account_deposits(self, start='', end='', currency_code='', max_page_size='', cursor=''):
+    def get_account_deposits(self, start=None, end=None, currency_code=None, max_page_size=None, cursor=None):
         """
         Return a paginated report on past cleared deposits, sorted by timestamp (newest first).
         If no query parameters are defined, it returns the last 100 deposits.
-
-
-        Todo
-            - unavailable
 
         Parameters
         ----------
@@ -327,18 +323,128 @@ class Api:
         end : str
             (Zoned date time value compliant with ISO 8601 which adheres to RFC3339. All market times are in UTC.)
             Defines end of a query search.
+        currency_code : str
+            Filter deposit history by currency code
+        max_page_size : str
+            Set max desired page size. If no value is provided, by default a maximum of 100 results per page
+            are returned. The maximum upper limit is 100 results per page.
+        cursor : str
+            Pointer specifying the position from which the next pages should be returned.
 
         Returns
         -------
-        Account : account belonging to api_key
+        list(json) : Returns the deposit history of account
 
         """
+
+        params = {
+            'from': start,
+            'to': end,
+            'currency_code': currency_code,
+            'max_page_size': max_page_size,
+            'cursor': cursor
+        }
+
         url = BASE_URL + '/account/deposits'
         headers = {
+            'Content-Type': 'application/json',
             'Accept': 'application/json',
             'Authorization': 'Bearer ' + self.api_key
         }
 
-        response = requests.get(url, headers=headers)
+        response = requests.get(url, headers=headers, params=params)
 
-        return response.json()
+        return response.json()['deposit_history']
+
+    def get_account_deposits_from_bitpanda(self, start=None, end=None, currency_code=None, max_page_size=None, cursor=None):
+        """
+        Return a paginated report on past cleared deposits which were transfers from Bitpanda.
+        This endpoint returns only transfers from Bitpanda, if you wish to see all deposits use Deposits,
+        sorted by timestamp (newest first). If no query parameters are defined, it returns the last 100 deposits.
+
+        Parameters
+        ----------
+        start : str
+            (Zoned date time value compliant with ISO 8601 which adheres to RFC3339. All market times are in UTC.)
+            Defines start of a query search.
+        end : str
+            (Zoned date time value compliant with ISO 8601 which adheres to RFC3339. All market times are in UTC.)
+            Defines end of a query search.
+        currency_code : str
+            Filter deposit history by currency code
+        max_page_size : str
+            Set max desired page size. If no value is provided, by default a maximum of 100 results per page
+            are returned. The maximum upper limit is 100 results per page.
+        cursor : str
+            Pointer specifying the position from which the next pages should be returned.
+
+        Returns
+        -------
+        list(json) : Returns the deposit history from Bitpanda of account
+
+        """
+
+        params = {
+            'from': start,
+            'to': end,
+            'currency_code': currency_code,
+            'max_page_size': max_page_size,
+            'cursor': cursor
+        }
+
+        url = BASE_URL + '/account/deposits'
+        headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': 'Bearer ' + self.api_key
+        }
+
+        response = requests.get(url, headers=headers, params=params)
+
+        return response.json()['deposit_history']
+
+    def get_account_withdrawals(self, start=None, end=None, currency_code=None, max_page_size=None, cursor=None):
+        """
+        Return a paginated report on past cleared deposits, sorted by timestamp (newest first).
+        If no query parameters are defined, it returns the last 100 deposits.
+
+        Parameters
+        ----------
+        start : str
+            (Zoned date time value compliant with ISO 8601 which adheres to RFC3339. All market times are in UTC.)
+            Defines start of a query search.
+        end : str
+            (Zoned date time value compliant with ISO 8601 which adheres to RFC3339. All market times are in UTC.)
+            Defines end of a query search.
+        currency_code : str
+            Filter withdrawal history by currency code
+        max_page_size : str
+            Set max desired page size. If no value is provided, by default a maximum of 100 results per page
+            are returned. The maximum upper limit is 100 results per page.
+        cursor : str
+            Pointer specifying the position from which the next pages should be returned.
+
+        Returns
+        -------
+        list(json) : Returns the deposit history of account
+
+        """
+
+        params = {
+            'from': start,
+            'to': end,
+            'currency_code': currency_code,
+            'max_page_size': max_page_size,
+            'cursor': cursor
+        }
+
+        url = BASE_URL + '/account/withdrawals'
+        headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': 'Bearer ' + self.api_key
+        }
+
+        response = requests.get(url, headers=headers, params=params)
+
+        return response.json()['withdrawal_history']
