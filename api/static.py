@@ -11,3 +11,5 @@ class Fiat(Enum):
     EURO = 'EUR'
     FRANC = 'CHF'
     POUND = 'GBP'
+
+
