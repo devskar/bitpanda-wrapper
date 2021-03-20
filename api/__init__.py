@@ -199,12 +199,18 @@ class Account:
 
         url = BASE_URL + '/account/deposit/crypto/' + curr_code
 
+        params = {
+            'currency_code': curr_code
+        }
+
         headers = {
             'Accept': 'application/json',
             'Authorization': 'Bearer ' + self.api_key
         }
 
-        response = requests.get(url, headers=headers)
+        response = requests.get(url, headers=headers, params=params)
+
+        print(response.json())
 
         if not response.json()['enabled']:
             return None
@@ -218,7 +224,7 @@ class Account:
         The API key can be generated via the user interface.
 
         Todo
-            - unavailable
+            - not returning correct?
 
         Parameters
         ----------
