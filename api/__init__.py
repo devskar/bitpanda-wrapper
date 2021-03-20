@@ -1,27 +1,11 @@
 import requests
 
-from .objects.withdraw import WithdrawCryptoBody
+from .objects.currencies import Currency
+from .objects.withdraw import WithdrawCryptoBody, WithdrawFiatBody
 from .static import Scope, Fiat
 from .wallets import Wallet
 
 BASE_URL = 'https://api.exchange.bitpanda.com/public/v1'
-
-
-def get_fees():
-    """
-    Returns bitpanda fees
-
-    Returns:
-    -------
-    string/json: fees
-
-    """
-
-    url = BASE_URL + '/fees'
-
-    response = requests.get(url)
-
-    return response.json()
 
 
 def get_currencies():
@@ -43,9 +27,47 @@ def get_currencies():
     currencies = set()
 
     for currency in json:
-        currencies.add((currency['code'], currency['precision']))
+        currencies.add(Currency(currency['code'], currency['precision']))
 
     return currencies
+
+
+# Todo Candlesticks
+
+
+def get_fee_groups():
+    """
+    Returns details of all general Fee Groups.
+    fee_discount_rate and minimum_price_value are applied when BEST fee collection is enabled.
+
+    Returns:
+    -------
+    string/json: fees
+
+    """
+
+    url = BASE_URL + '/fees'
+
+    response = requests.get(url)
+
+    return response.json()
+
+
+def get_instruments():
+    """
+    Get a list of all available trade instruments
+
+    Returns:
+    -------
+
+
+    """
+
+    url = BASE_URL + '/instruments'
+
+    response = requests.get(url)
+
+    return response.json()
 
 
 def get_server_time_iso():
@@ -184,7 +206,7 @@ class Account:
         otherwise this operation will be rejected. The api key can be generated via the user interface.
 
         Todo
-            - unavailable?
+            - not working?
 
         Parameters
         ----------
@@ -223,9 +245,6 @@ class Account:
         Make sure to use a valid API key with the scope WITHDRAW, otherwise this operation will be rejected.
         The API key can be generated via the user interface.
 
-        Todo
-            - not returning correct?
-
         Parameters
         ----------
         fiat : Fiat
@@ -248,7 +267,7 @@ class Account:
 
         return response.json()
 
-    def withdraw_fiat(self, withdraw_crypto_body: WithdrawCryptoBody):
+    def withdraw_fiat(self, withdraw_fiat_body: WithdrawFiatBody):
         """
         Initiates a withdrawal.
         Make sure to use a valid api key with the scope WITHDRAW, otherwise this operation will be rejected.
@@ -275,7 +294,9 @@ class Account:
             'Authorization': 'Bearer ' + self.api_key
         }
 
-        response = requests.post(url, headers=headers, params=withdraw_crypto_body.to_dict())
+        response = requests.post(url, headers=headers, params=withdraw_fiat_body.to_dict())
+
+        print(response.json())
 
         return response.json()['transaction_id']
 
@@ -528,7 +549,79 @@ class Account:
         return response.json()
 
     def get_orders(self, start=None, end=None, instrument_code=None, with_cancelled_and_rejected=None,
-                   with_just_filled_inactive= None, with_just_orders=None, max_page_size=None, cursor=None):
+                   with_just_filled_inactive=None, with_just_orders=None, max_page_size=None, cursor=None):
+        """
+        Return a paginated report on currently open orders, sorted by creation timestamp (newest first).
+        Query parameters and filters can be used to specify if historical orders should be reported as well.
+        If no query filters are defined, all orders which are currently active will be returned.
+        If you want to query specific time frame parameters, from and to are mandatory,
+        otherwise it will start from the latest orders.
+        The maximum time frame you can query at one time is 100 days.
+
+        Parameters
+        ----------
+        start : str
+            (Zoned date time value compliant with ISO 8601 which adheres to RFC3339. All market times are in UTC.)
+            Defines start of a query search.
+
+        end : str
+            (Zoned date time value compliant with ISO 8601 which adheres to RFC3339. All market times are in UTC.)
+            Defines end of a query search.
+
+        instrument_code : str
+            Filter order history by instrument code
+
+        with_cancelled_and_rejected : bool
+            Return orders which have been cancelled by the user before being filled or rejected by the system as
+            invalid. Additionally, all inactive filled orders which would return with "with_just_filled_inactive".
+
+        with_just_filled_inactive : bool
+            Return order history for orders which have been filled and are no longer open.
+            Use of "with_cancelled_and_rejected" extends "with_just_filled_inactive"
+            and in case both are specified the latter is ignored.
+
+        with_just_orders : bool
+            Returns order history for orders but does not return any trades corresponding to the orders.
+            It may be significantly faster and should be used if user is not interesting in trade information.
+            Can be combined with any other filter.
+
+        max_page_size : str
+            Set max desired page size. If no value is provided, by default a maximum of 100 results per page
+            are returned. The maximum upper limit is 100 results per page.
+
+        cursor : str
+            Pointer specifying the position from which the next pages should be returned.
+
+        Returns
+        -------
+        list(json) : Returns the withdrawals history from Bitpanda of account
+
+        """
+
+        params = {
+            'from': start,
+            'to': end,
+            'instrument_code': instrument_code,
+            'with_cancelled_and_rejected': with_cancelled_and_rejected,
+            'with_just_filled_inactive': with_just_filled_inactive,
+            'with_just_orders': with_just_orders,
+            'max_page_size': max_page_size,
+            'cursor': cursor
+        }
+
+        url = BASE_URL + '/account/orders'
+        headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': 'Bearer ' + self.api_key
+        }
+
+        response = requests.get(url, headers=headers, params=params)
+
+        return response.json()
+
+    def create_order(self, start=None, end=None, instrument_code=None, with_cancelled_and_rejected=None,
+                     with_just_filled_inactive=None, with_just_orders=None, max_page_size=None, cursor=None):
         """
         Return a paginated report on currently open orders, sorted by creation timestamp (newest first).
         Query parameters and filters can be used to specify if historical orders should be reported as well.
