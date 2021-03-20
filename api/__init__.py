@@ -281,7 +281,7 @@ class Account:
 
         Parameters
         ----------
-        withdraw_crypto_body : withdraw.WithdrawCryptoBody
+        withdraw_fiat_body : withdraw.WithdrawFiatBody
             Withdrawal information
 
 
@@ -495,8 +495,8 @@ class Account:
 
         Returns
         -------
-        dict/json :    Returns the fee tiers, the running trading volume, the active fee tier specific for an account and
-                        the BEST fee collection settings.
+        dict/json :     Returns the fee tiers, the running trading volume, the active fee tier specific for an account
+                        and the BEST fee collection settings.
 
         """
 
