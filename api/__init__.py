@@ -652,7 +652,6 @@ class Account:
 
         Returns
         -------
-        todo
         SuccessfulOder : Returns a SuccessfulOrder instance
 
         """
@@ -667,3 +666,55 @@ class Account:
         response = requests.get(url, headers=headers, params=order.as_dict())
 
         return SuccessfulOrder.from_json(response.json())
+
+    def close_all_orders(self, instrument_code=None, *ids):
+        """
+        Submits a close request for all open orders of an account.
+
+        Optionally the user can specify either the instrument_code or a list of ids as HTTP query parameters.
+        The instrument_code parameter will only close orders for a given instrument,
+        while the ids parameter can be used to specify various orders regardless to which markets they belong.
+        Calling this endpoint without any of the optional parameters will close all orders of the account.
+        Calling this endpoint with both query parameters set is not supported.
+
+        There is an upper limit of 20 orders that can be closed at a time through the ids parameter.
+        The orders must be submitted by the account that the API key has been created for.
+        When the API returns 200 OK, it returns a list of UUIDs representing the orders that were submitted
+        for cancellation.
+
+        Bitpanda Pro will always fill orders with best effort. Therefore, when attempting to close all orders,
+        these orders may be in the process of being filled. In this case,
+        Bitpanda Pro will attempt to close the orders but the order may already be partially/fully filled.
+
+        Make sure to have a valid API key with the scope TRADE, otherwise this operation will be rejected.
+        The API key can be generated via the user interface at https://exchange.bitpanda.com/account/api/keys.
+
+        Parameters
+        ----------
+        instrument_code : str
+            Only close orders in given market (omit to close all orders)
+
+        ids : *
+            An array of comma separated UUIDs, of the form [UUID_1,UUID_2,UUID_3,...,UUID_N]
+
+        Returns
+        -------
+        list : The following orders ids were submitted for closing
+
+        """
+
+        url = BASE_URL + '/account/orders'
+        headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': 'Bearer ' + self.api_key
+        }
+
+        params = {
+            'instrument_code': instrument_code,
+            'ids': list(ids)
+        }
+
+        response = requests.get(url, headers=headers, params=params)
+
+        return response.json()
