@@ -7,16 +7,16 @@ class Side(Enum):
 
 
 class Type(Enum):
-    LIMIT = 'LIMIT',
-    MARKET = 'MARKET',
+    LIMIT = 'LIMIT'
+    MARKET = 'MARKET'
     STOP = 'STOP'
 
 
 class Time_In_Force(Enum):
-    GOOD_TILL_CANCELLED = 'GOOD_TILL_CANCELLED',
-    GOOD_TILL_TIME = 'GOOD_TILL_TIME',
-    IMMEDIATE_OR_CANCELLED = 'IMMEDIATE_OR_CANCELLED',
-    FILL_OR_KILL = 'FILL_OR_KILL',
+    GOOD_TILL_CANCELLED = 'GOOD_TILL_CANCELLED'
+    GOOD_TILL_TIME = 'GOOD_TILL_TIME'
+    IMMEDIATE_OR_CANCELLED = 'IMMEDIATE_OR_CANCELLED'
+    FILL_OR_KILL = 'FILL_OR_KILL'
     NONE = None
 
 
@@ -71,12 +71,24 @@ class Order:
         A stop-limit order will be executed at a specified price (see price), or better, after the given trigger price
         has been reached.
 
+    order_id : str
+        Id of a successful order given by Bitpanda
+
+    account_id : str
+        Id of account the order was made from given by Bitpanda
+
+    time : str
+        Time where an order was made
+
+    filled_amount : str
+        todo
+
     """
 
     def __init__(self, instrument_code: str, type: Type, side: Side, amount: str, price: str = None,
                  client_id: str = None, time_in_force: Time_In_Force = Time_In_Force.NONE, expire_after: str = None,
-                 is_post_only: bool = False, trigger_price: str = None):
-
+                 is_post_only: bool = False, trigger_price: str = None, order_id: str = None, account_id: str = None,
+                 time: str = None, filled_amount: str = None):
         self.instrument_code = instrument_code
         self.type = type
         self.side = side
@@ -87,6 +99,10 @@ class Order:
         self.expire_after = expire_after
         self.is_post_only = is_post_only
         self.trigger_price = trigger_price
+        self.order_id = order_id
+        self.account_id = account_id
+        self.time = time
+        self.filled_amount = filled_amount
 
     def as_dict(self):
         dictionary = {
@@ -99,7 +115,11 @@ class Order:
             'time_in_force': self.time_in_force.value,
             'expire_after': self.expire_after,
             'is_post_only': self.is_post_only,
-            'trigger_price': self.trigger_price
+            'trigger_price': self.trigger_price,
+            'order_id': self.order_id,
+            'account_id': self.account_id,
+            'time': self.time,
+            'filled_amount': self.filled_amount
         }
 
         return {k: v for k, v in dictionary.items() if v is not None}
@@ -126,3 +146,18 @@ class MarketOrder(Order):
                  client_id: str = None):
         super().__init__(instrument_code=instrument_code, type=Type.MARKET, side=side, amount=amount, price=price,
                          client_id=client_id)
+
+
+class SuccessfulOrder(Order):
+    def __init__(self, order_id: str, client_id: str, account_id: str, instrument_code: str, time: str, side: Side,
+                 price: str, amount: str, filled_amount: str, type: Type, time_in_force: Time_In_Force):
+        super().__init__(order_id=order_id, client_id=client_id, account_id=account_id, instrument_code=instrument_code,
+                         time=time, side=side, price=price, amount=amount, filled_amount=filled_amount,
+                         type=type, time_in_force=time_in_force)
+
+    @staticmethod
+    def from_json(json):
+        return SuccessfulOrder(order_id=json['order_id'], client_id=json['client_id'], account_id=json['account_id'],
+                               instrument_code=json['instrument_code'], time=json['time'], side=Side[json['side']],
+                               price=json['price'], amount=json['amount'], filled_amount=json['filled_amount'],
+                               type=Type[json['type']], time_in_force=Time_In_Force[json['time_in_force']])

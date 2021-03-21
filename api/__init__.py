@@ -1,6 +1,7 @@
 import requests
 
 from .objects.currencies import Currency
+from .objects.orders import Order, SuccessfulOrder
 from .objects.withdraw import WithdrawCryptoBody, WithdrawFiatBody
 from .static import Scope, Fiat
 from api.objects.wallets import Wallet
@@ -620,66 +621,41 @@ class Account:
 
         return response.json()
 
-    def create_order(self, start=None, end=None, instrument_code=None, with_cancelled_and_rejected=None,
-                     with_just_filled_inactive=None, with_just_orders=None, max_page_size=None, cursor=None):
+    def create_order(self, order: Order):
         """
-        Return a paginated report on currently open orders, sorted by creation timestamp (newest first).
-        Query parameters and filters can be used to specify if historical orders should be reported as well.
-        If no query filters are defined, all orders which are currently active will be returned.
-        If you want to query specific time frame parameters, from and to are mandatory,
-        otherwise it will start from the latest orders.
-        The maximum time frame you can query at one time is 100 days.
+        Create a new order of the type LIMIT, MARKET or STOP.
+
+        Additionally, LIMIT Orders support GOOD_TILL_CANCELLED, GOOD_TILL_TIME, IMMEDIATE_OR_CANCELLED and
+        FILL_OR_KILL which can be specified as time_in_force option.
+        If none is specified GOOD_TILL_CANCELLED is assumed. If GOOD_TILL_TIME is set as time_in_force,
+        client is also expected to provide time after which the limit order expires.
+
+        There is a minimum size per order which can be looked up by querying the /instruments endpoint.
+        Additionally, the precision limitations can be found there. Globally across all markets, at most 200 orders
+        can be kept open at any given point in time.
+
+        Optionally a client_id can be set by clients to track orders without waiting for the assigned order id.
+        While an order with a set client_id is active other orders with the same client_id will be rejected as
+        duplicates. As soon as the order is fully filled or cancelled by user or automatically by system,
+        another order can be created using the same client_id. Therefore specifying a client_id is not a suitable
+        protection against re-execution of an order.
+
+        Make sure to have a valid api key with the scope TRADE, otherwise this operation will be rejected.
+        The api key can be generated via the user interface at https://exchange.bitpanda.com/account/api/keys.
 
         Parameters
         ----------
-        start : str
+        order : orders.Order
             (Zoned date time value compliant with ISO 8601 which adheres to RFC3339. All market times are in UTC.)
             Defines start of a query search.
 
-        end : str
-            (Zoned date time value compliant with ISO 8601 which adheres to RFC3339. All market times are in UTC.)
-            Defines end of a query search.
-
-        instrument_code : str
-            Filter order history by instrument code
-
-        with_cancelled_and_rejected : bool
-            Return orders which have been cancelled by the user before being filled or rejected by the system as
-            invalid. Additionally, all inactive filled orders which would return with "with_just_filled_inactive".
-
-        with_just_filled_inactive : bool
-            Return order history for orders which have been filled and are no longer open.
-            Use of "with_cancelled_and_rejected" extends "with_just_filled_inactive"
-            and in case both are specified the latter is ignored.
-
-        with_just_orders : bool
-            Returns order history for orders but does not return any trades corresponding to the orders.
-            It may be significantly faster and should be used if user is not interesting in trade information.
-            Can be combined with any other filter.
-
-        max_page_size : str
-            Set max desired page size. If no value is provided, by default a maximum of 100 results per page
-            are returned. The maximum upper limit is 100 results per page.
-
-        cursor : str
-            Pointer specifying the position from which the next pages should be returned.
 
         Returns
         -------
-        list(json) : Returns the withdrawals history from Bitpanda of account
+        todo
+        SuccessfulOder : Returns a SuccessfulOrder instance
 
         """
-
-        params = {
-            'from': start,
-            'to': end,
-            'instrument_code': instrument_code,
-            'with_cancelled_and_rejected': with_cancelled_and_rejected,
-            'with_just_filled_inactive': with_just_filled_inactive,
-            'with_just_orders': with_just_orders,
-            'max_page_size': max_page_size,
-            'cursor': cursor
-        }
 
         url = BASE_URL + '/account/orders'
         headers = {
@@ -688,6 +664,6 @@ class Account:
             'Authorization': 'Bearer ' + self.api_key
         }
 
-        response = requests.get(url, headers=headers, params=params)
+        response = requests.get(url, headers=headers, params=order.as_dict())
 
-        return response.json()
+        return SuccessfulOrder.from_json(response.json())
