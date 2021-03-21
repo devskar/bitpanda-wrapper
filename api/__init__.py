@@ -3,7 +3,7 @@ import requests
 from .objects.currencies import Currency
 from .objects.withdraw import WithdrawCryptoBody, WithdrawFiatBody
 from .static import Scope, Fiat
-from .wallets import Wallet
+from api.objects.wallets import Wallet
 
 BASE_URL = 'https://api.exchange.bitpanda.com/public/v1'
 
