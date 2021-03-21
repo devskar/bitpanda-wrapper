@@ -9,6 +9,39 @@ from api.objects.wallets import Wallet
 BASE_URL = 'https://api.exchange.bitpanda.com/public/v1'
 
 
+def _make_request(req_type, endpoint, **kwargs):
+    url = BASE_URL + endpoint
+    response = None
+
+    req_type = req_type.upper()
+
+    headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+    }
+
+    if req_type == 'GET':
+        response = requests.get(url, headers=headers, **kwargs)
+
+    if req_type == 'DELETE':
+        response = requests.delete(url, headers=headers, **kwargs)
+
+    if req_type == 'PUT':
+        response = requests.put(url, headers=headers, **kwargs)
+
+    if req_type == 'POST':
+        response = requests.post(url, headers=headers, **kwargs)
+
+    # ERROR HANDLING
+
+    if response.status_code != 200:
+        print(response.status_code)
+        print(response.json())
+        raise Exception()
+
+    return response.json()
+
+
 def get_currencies():
     """
     Returns currencies with their precision
@@ -19,11 +52,7 @@ def get_currencies():
 
     """
 
-    url = BASE_URL + '/currencies'
-
-    response = requests.get(url)
-
-    json = response.json()
+    json = _make_request('GET', '/currencies')
 
     currencies = set()
 
@@ -43,15 +72,11 @@ def get_fee_groups():
 
     Returns:
     -------
-    string/json: fees
+    string(json) : fees
 
     """
 
-    url = BASE_URL + '/fees'
-
-    response = requests.get(url)
-
-    return response.json()
+    return _make_request('GET', '/fees')
 
 
 def get_instruments():
@@ -60,15 +85,10 @@ def get_instruments():
 
     Returns:
     -------
-
-
+    Todo
     """
 
-    url = BASE_URL + '/instruments'
-
-    response = requests.get(url)
-
-    return response.json()
+    return _make_request('GET', '/instruments')
 
 
 def get_server_time_iso():
@@ -81,11 +101,7 @@ def get_server_time_iso():
 
     """
 
-    url = BASE_URL + '/time'
-
-    response = requests.get(url)
-
-    json = response.json()
+    json = _make_request('GET', '/time')
 
     return json['iso']
 
@@ -100,11 +116,7 @@ def get_server_time_millis():
 
     """
 
-    url = BASE_URL + '/time'
-
-    response = requests.get(url)
-
-    json = response.json()
+    json = _make_request('GET', '/time')
 
     return json['epoch_millis']
 
@@ -117,7 +129,41 @@ class Account:
     def __init__(self, api_key):
         self.api_key = api_key
 
-    def get_account_balances(self):
+    def _make_request(self, req_type, endpoint, **kwargs):
+
+        url = BASE_URL + '/account' + endpoint
+        response = None
+
+        req_type = req_type.upper()
+
+        headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': 'Bearer ' + self.api_key
+        }
+
+        if req_type == 'GET':
+            response = requests.get(url, headers=headers, **kwargs)
+
+        if req_type == 'DELETE':
+            response = requests.delete(url, headers=headers, **kwargs)
+
+        if req_type == 'PUT':
+            response = requests.put(url, headers=headers, **kwargs)
+
+        if req_type == 'POST':
+            response = requests.post(url, headers=headers, **kwargs)
+
+        # ERROR HANDLING
+
+        if response.status_code != 200:
+            print(response.status_code)
+            print(response.json())
+            raise Exception()
+
+        return response.json()
+
+    def get_balances(self):
         """
         Returns the balance details for an account.
 
@@ -127,16 +173,9 @@ class Account:
 
         """
 
-        url = BASE_URL + '/account/balances'
-        headers = {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'Authorization': 'Bearer ' + self.api_key
-        }
+        json = self._make_request('GET', '/balances')
 
-        response = requests.get(url, headers=headers)
-
-        return Wallet.from_json(response.json())
+        return Wallet.from_json(json)
 
     def deposit_crypto(self, curr_code):
         """
@@ -154,20 +193,13 @@ class Account:
 
         """
 
-        url = BASE_URL + '/account/deposit/crypto'
-        headers = {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'Authorization': 'Bearer ' + self.api_key
-        }
-
         params = {
             'currency': curr_code
         }
 
-        response = requests.post(url, headers=headers, params=params)
+        json = self._make_request('POST', '/deposit/crypto', params=params)
 
-        print(response.json())
+        return json
 
     def withdraw_crypto(self, withdraw_crypto_body: WithdrawCryptoBody):
         """
@@ -189,16 +221,9 @@ class Account:
 
         """
 
-        url = BASE_URL + '/account/withdraw/crypto'
-        headers = {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'Authorization': 'Bearer ' + self.api_key
-        }
+        json = self._make_request('POST', '/withdraw/crypto', params=withdraw_crypto_body.to_dict())
 
-        response = requests.post(url, headers=headers, params=withdraw_crypto_body.to_dict())
-
-        print(response.json())
+        return json
 
     def get_deposit_address(self, curr_code):
         """
@@ -220,25 +245,9 @@ class Account:
 
         """
 
-        url = BASE_URL + '/account/deposit/crypto/' + curr_code
+        json = self._make_request('GET', '/deposit/crypto/' + curr_code)
 
-        params = {
-            'currency_code': curr_code
-        }
-
-        headers = {
-            'Accept': 'application/json',
-            'Authorization': 'Bearer ' + self.api_key
-        }
-
-        response = requests.get(url, headers=headers, params=params)
-
-        print(response.json())
-
-        if not response.json()['enabled']:
-            return None
-
-        return response.json()['address']
+        return json['address']
 
     def get_deposit_fiat(self, fiat: Fiat):
         """
@@ -257,16 +266,9 @@ class Account:
 
         """
 
-        url = BASE_URL + '/account/deposit/fiat/' + fiat.value
+        json = self._make_request('GET', '/deposit/fiat/' + fiat.value)
 
-        headers = {
-            'Accept': 'application/json',
-            'Authorization': 'Bearer ' + self.api_key
-        }
-
-        response = requests.get(url, headers=headers)
-
-        return response.json()
+        return json
 
     def withdraw_fiat(self, withdraw_fiat_body: WithdrawFiatBody):
         """
@@ -288,20 +290,11 @@ class Account:
 
         """
 
-        url = BASE_URL + '/account/withdraw/fiat'
-        headers = {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'Authorization': 'Bearer ' + self.api_key
-        }
+        json = self._make_request('POST', '/withdraw/fiat', params=withdraw_fiat_body.to_dict())
 
-        response = requests.post(url, headers=headers, params=withdraw_fiat_body.to_dict())
+        return json['transaction_id']
 
-        print(response.json())
-
-        return response.json()['transaction_id']
-
-    def get_account_deposits(self, start=None, end=None, currency_code=None, max_page_size=None, cursor=None):
+    def get_deposits(self, start=None, end=None, currency_code=None, max_page_size=None, cursor=None):
         """
         Return a paginated report on past cleared deposits, sorted by timestamp (newest first).
         If no query parameters are defined, it returns the last 100 deposits.
@@ -336,19 +329,12 @@ class Account:
             'cursor': cursor
         }
 
-        url = BASE_URL + '/account/deposits'
-        headers = {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'Authorization': 'Bearer ' + self.api_key
-        }
+        json = self._make_request('GET', '/deposits', params=params)
 
-        response = requests.get(url, headers=headers, params=params)
+        return json['deposit_history']
 
-        return response.json()['deposit_history']
-
-    def get_account_deposits_from_bitpanda(self, start=None, end=None, currency_code=None, max_page_size=None,
-                                           cursor=None):
+    def get_deposits_from_bitpanda(self, start=None, end=None, currency_code=None, max_page_size=None,
+                                   cursor=None):
         """
         Return a paginated report on past cleared deposits which were transfers from Bitpanda.
         This endpoint returns only transfers from Bitpanda, if you wish to see all deposits use Deposits,
@@ -384,18 +370,11 @@ class Account:
             'cursor': cursor
         }
 
-        url = BASE_URL + '/account/deposits/bitpanda'
-        headers = {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'Authorization': 'Bearer ' + self.api_key
-        }
+        json = self._make_request('GET', '/deposits/bitpanda', params=params)
 
-        response = requests.get(url, headers=headers, params=params)
+        return json['deposit_history']
 
-        return response.json()['deposit_history']
-
-    def get_account_withdrawals(self, start=None, end=None, currency_code=None, max_page_size=None, cursor=None):
+    def get_withdrawals(self, start=None, end=None, currency_code=None, max_page_size=None, cursor=None):
         """
         Return a paginated report on past cleared deposits, sorted by timestamp (newest first).
         If no query parameters are defined, it returns the last 100 deposits.
@@ -430,19 +409,12 @@ class Account:
             'cursor': cursor
         }
 
-        url = BASE_URL + '/account/withdrawals'
-        headers = {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'Authorization': 'Bearer ' + self.api_key
-        }
+        json = self._make_request('GET', '/withdrawals', params=params)
 
-        response = requests.get(url, headers=headers, params=params)
+        return json['withdrawal_history']
 
-        return response.json()['withdrawal_history']
-
-    def get_account_withdrawals_from_bitpanda(self, start=None, end=None, currency_code=None, max_page_size=None,
-                                              cursor=None):
+    def get_withdrawals_from_bitpanda(self, start=None, end=None, currency_code=None, max_page_size=None,
+                                      cursor=None):
         """
         Return a paginated report on past cleared withdrawals which were transfers from Bitpanda.
         This endpoint returns only transfers from Bitpanda, if you wish to see all withdrawals use Withdrawals,
@@ -478,16 +450,9 @@ class Account:
             'cursor': cursor
         }
 
-        url = BASE_URL + '/account/withdrawals/bitpanda'
-        headers = {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'Authorization': 'Bearer ' + self.api_key
-        }
+        json = self._make_request('GET', '/withdrawals/bitpanda', params=params)
 
-        response = requests.get(url, headers=headers, params=params)
-
-        return response.json()['withdrawal_history']
+        return json['withdrawal_history']
 
     def get_fees(self):
         """
@@ -501,15 +466,9 @@ class Account:
 
         """
 
-        url = BASE_URL + '/account/fees'
-        headers = {
-            'Accept': 'application/json',
-            'Authorization': 'Bearer ' + self.api_key
-        }
+        json = self._make_request('GET', '/fees')
 
-        response = requests.get(url, headers=headers)
-
-        return response.json()
+        return json
 
     def toggle_best_fee_collection(self, collect_fees_in_best: bool = None):
         """
@@ -534,20 +493,13 @@ class Account:
 
         """
 
-        url = BASE_URL + '/account/deposit/crypto'
-        headers = {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'Authorization': 'Bearer ' + self.api_key
-        }
-
         params = {
             'collect_fees_in_best': collect_fees_in_best
         }
 
-        response = requests.post(url, headers=headers, params=params)
+        json = self._make_request('POST', '/fees', params=params)
 
-        return response.json()
+        return json
 
     def get_orders(self, start=None, end=None, instrument_code=None, with_cancelled_and_rejected=None,
                    with_just_filled_inactive=None, with_just_orders=None, max_page_size=None, cursor=None):
@@ -610,16 +562,9 @@ class Account:
             'cursor': cursor
         }
 
-        url = BASE_URL + '/account/orders'
-        headers = {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'Authorization': 'Bearer ' + self.api_key
-        }
+        json = self._make_request('GET', '/orders', params=params)
 
-        response = requests.get(url, headers=headers, params=params)
-
-        return response.json()
+        return json
 
     def create_order(self, order: Order):
         """
@@ -656,16 +601,9 @@ class Account:
 
         """
 
-        url = BASE_URL + '/account/orders'
-        headers = {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'Authorization': 'Bearer ' + self.api_key
-        }
+        json = self._make_request('POST', '/orders', params=order.to_dict())
 
-        response = requests.get(url, headers=headers, params=order.as_dict())
-
-        return SuccessfulOrder.from_json(response.json())
+        return SuccessfulOrder.from_json(json)
 
     def close_all_orders(self, instrument_code=None, *ids):
         """
@@ -703,21 +641,14 @@ class Account:
 
         """
 
-        url = BASE_URL + '/account/orders'
-        headers = {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'Authorization': 'Bearer ' + self.api_key
-        }
-
         params = {
             'instrument_code': instrument_code,
             'ids': list(ids)
         }
 
-        response = requests.delete(url, headers=headers, params=params)
+        json = self._make_request('DELETE', '/orders', params=params)
 
-        return response.json()
+        return json
 
     def get_order(self, order_id):
         """
@@ -734,17 +665,34 @@ class Account:
 
         """
 
-        url = BASE_URL + '/account/orders/' + order_id
-        headers = {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'Authorization': 'Bearer ' + self.api_key
-        }
-
-        response = requests.get(url, headers=headers)
-
-        json = response.json()
+        json = self._make_request('GET', '/orders/' + order_id)
 
         info = (Order.from_json(json['order']), json['trades'])
 
         return info
+
+    def update_order_by_id(self, order_id, amount):
+        """
+        Get information for an order
+
+        Parameters
+        ----------
+        order_id : str
+            Order Id of order which should be updated.
+
+        amount : str
+            A new positive non-null amount which will replace the previous value
+
+        Returns
+        -------
+        string(json) : Returning the order id and the updates that have been made.
+
+        """
+
+        params = {
+            'amount': amount
+        }
+
+        json = self._make_request('PUT', '/orders/' + order_id, params=params)
+
+        return json
