@@ -88,7 +88,8 @@ class Order:
     def __init__(self, instrument_code: str, type: Type, side: Side, amount: str, price: str = None,
                  client_id: str = None, time_in_force: Time_In_Force = Time_In_Force.NONE, expire_after: str = None,
                  is_post_only: bool = False, trigger_price: str = None, order_id: str = None, account_id: str = None,
-                 time: str = None, filled_amount: str = None):
+                 time: str = None, filled_amount: str = None, time_last_updated: str = None, sequence: int = None,
+                 order_book_sequence: int = None, status: str = None):
         self.instrument_code = instrument_code
         self.type = type
         self.side = side
@@ -103,6 +104,10 @@ class Order:
         self.account_id = account_id
         self.time = time
         self.filled_amount = filled_amount
+        self.time_last_updated = time_last_updated
+        self.sequence = sequence
+        self.order_book_sequence = order_book_sequence
+        self.status = status
 
     def as_dict(self):
         dictionary = {
@@ -119,10 +124,23 @@ class Order:
             'order_id': self.order_id,
             'account_id': self.account_id,
             'time': self.time,
-            'filled_amount': self.filled_amount
+            'filled_amount': self.filled_amount,
+            'time_last_updated': self.time_last_updated,
+            'sequence': self.sequence,
+            'order_book_sequence': self.order_book_sequence,
+            'status': self.status,
         }
 
         return {k: v for k, v in dictionary.items() if v is not None}
+
+    @staticmethod
+    def from_json(json):
+        return Order(order_id=json['order_id'], account_id=json['account_id'],
+                     time_last_updated=json['time_last_updated'], sequence=json['sequence'],
+                     order_book_sequence=json['order_book_sequence'], price=json['price'],
+                     filled_amount=json['filled_amount'], status=json['status'], amount=json['amount'],
+                     instrument_code=json['instrument_code'], side=Side[json['side']], time=json['time'],
+                     type=Type[json['type']])
 
 
 class LimitOrder(Order):

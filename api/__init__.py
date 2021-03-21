@@ -715,6 +715,36 @@ class Account:
             'ids': list(ids)
         }
 
-        response = requests.get(url, headers=headers, params=params)
+        response = requests.delete(url, headers=headers, params=params)
 
         return response.json()
+
+    def get_order(self, order_id):
+        """
+        Get information for an order
+
+        Parameters
+        ----------
+        order_id : str
+            id of the order
+
+        Returns
+        -------
+        tuple(Order, dict(trades)) : Returns general information about the order and the trades that have been made.
+
+        """
+
+        url = BASE_URL + '/account/orders/' + order_id
+        headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': 'Bearer ' + self.api_key
+        }
+
+        response = requests.get(url, headers=headers)
+
+        json = response.json()
+
+        info = (Order.from_json(json['order']), json['trades'])
+
+        return info
