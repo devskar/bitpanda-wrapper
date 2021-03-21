@@ -109,7 +109,7 @@ class Order:
         self.order_book_sequence = order_book_sequence
         self.status = status
 
-    def as_dict(self):
+    def to_dict(self):
         dictionary = {
             'instrument_code': self.instrument_code,
             'type': self.type.value,
